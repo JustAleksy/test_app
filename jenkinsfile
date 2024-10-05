@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+
+    environment {
+        // Переменные окружения
+        DOCKER_HUB_CREDENTIALS = '5fa4a291-1c8c-4245-acd4-ea22cd1e1dab' // ID учетных данных Docker Hub в Jenkins
+        DOCKER_IMAGE = "justmeat/test-app:${env.BUILD_NUMBER}"
+        KUBE_CONFIG = credentials('ba0108b3-608f-48a0-bf69-ecdc48973380') // ID kubeconfig файла в Jenkins Credentials
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Клонируем репозиторий
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Логинимся в Docker Hub и собираем образ
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_HUB_CREDENTIALS) {
+                        def app = docker.build("${DOCKER_IMAGE}")
+                        app.push()
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withKubeConfig([credentialsId: 'kubeconfig']) {
+                    // Обновляем образ в Kubernetes Deployment
+                    sh """
+                    kubectl set image deployment/your-deployment-name your-container-name=${DOCKER_IMAGE}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Очищаем Docker-окружение
+            cleanWs()
+        }
+        failure {
+            // Отправляем уведомление при сбое
+            mail to: 'imformeat@gmail.com',
+                 subject: "Failed Pipeline: ${currentBuild.fullDisplayName}",
+                 body: "Something is wrong with ${env.BUILD_URL}"
+        }
+    }
+}
