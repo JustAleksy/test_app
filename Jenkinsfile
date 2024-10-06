@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         // Переменные окружения
-        DOCKER_HUB_CREDENTIALS = '5fa4a291-1c8c-4245-acd4-ea22cd1e1dab' // ID учетных данных Docker Hub в Jenkins
+        DOCKER_HUB_CREDENTIALS = '0fb1329c-e01b-46f0-80b3-640aca04b2a8' ID учетных данных Docker Hub в Jenkins
         DOCKER_IMAGE = "justmeat/test-app:${env.BUILD_NUMBER}"
-        KUBE_CONFIG = credentials('ba0108b3-608f-48a0-bf69-ecdc48973380') // ID kubeconfig файла в Jenkins Credentials
+        KUBE_CONFIG = credentials('b22ac297-e610-4102-836e-fc26d67c5485') // ID kubeconfig файла в Jenkins Credentials
     }
 
     stages {
