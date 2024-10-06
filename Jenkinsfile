@@ -30,12 +30,12 @@ pipeline {
                 withKubeConfig([credentialsId: 'b22ac297-e610-4102-836e-fc26d67c5485']) {
                     script {
                         // Автоматически извлекаем имена деплоя и контейнера
-                        def deploymentName = sh(returnStdout: true, script: "kubectl get deployments -l app=my-app -o jsonpath='{.items[0].metadata.name}'").trim()
-                        def containerName = sh(returnStdout: true, script: "kubectl get deployment ${deploymentName} -o jsonpath='{.spec.template.spec.containers[0].name}'").trim()
+                        def deploymentName = sh(returnStdout: true, script: "kubectl get deployments -l app=my-app -n monitoring -o jsonpath='{.items[0].metadata.name}'").trim()
+                        def containerName = sh(returnStdout: true, script: "kubectl get deployment ${deploymentName} -n monitoring -o jsonpath='{.spec.template.spec.containers[0].name}'").trim()
 
                         // Обновляем образ в Kubernetes Deployment
                         sh """
-                        kubectl set image deployment/${deploymentName} ${containerName}=${DOCKER_IMAGE}
+                        kubectl set image deployment/${deploymentName} ${containerName}=${DOCKER_IMAGE} -n monitoring
                         """
                     }
                 }
