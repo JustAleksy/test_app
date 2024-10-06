@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: monitoring-ingress
+  name: app-and-monitoring-ingress
   namespace: monitoring
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
@@ -9,17 +9,17 @@ spec:
   rules:
   - http:
       paths:
-      - path: /grafana
-        pathType: Prefix
-        backend:
-          service:
-            name: monitoring-grafana
-            port:
-              number: 80
       - path: /app
         pathType: Prefix
         backend:
           service:
             name: test-app-service
+            port:
+              number: 80
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: monitoring-grafana
             port:
               number: 80
