@@ -6,146 +6,132 @@
     <title>Test Application</title>
     <style>
         body {
+            background: linear-gradient(45deg, #8A2BE2, #FF69B4, #1E90FF);
+            height: 100vh;
             margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background: linear-gradient(45deg, #6e00ff, #ff007f, #00c4ff);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+            font-family: Arial, sans-serif;
             color: white;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             text-align: center;
         }
 
-        @keyframes gradient {
-            0% {background-position: 0% 50%;}
-            50% {background-position: 100% 50%;}
-            100% {background-position: 0% 50%;}
-        }
-
         h1 {
-            font-size: 2.5rem;
             margin-bottom: 20px;
         }
 
-        footer {
-            position: fixed;
-            bottom: 10px;
+        .footer {
+            position: absolute;
+            bottom: 20px;
             width: 100%;
             text-align: center;
             font-size: 14px;
         }
 
-        .button {
+        .pay-respect-btn {
+            background-color: #007aff;
+            color: white;
+            border: none;
             padding: 15px 30px;
             font-size: 20px;
-            color: white;
-            background-color: #007aff;
-            border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: background-color 0.3s ease;
         }
 
-        .button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        .pay-respect-btn:hover {
+            background-color: #005bb5;
         }
 
-        .fireworks {
-            position: absolute;
+        canvas {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 10;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
         }
     </style>
 </head>
 <body>
+
     <h1>Это тестовое приложение для дипломного проекта</h1>
 
-    <button class="button" onclick="triggerFireworks()">Press F to pay respect</button>
+    <button class="pay-respect-btn" onclick="triggerFireworks()">Press F to pay respect</button>
 
-    <div class="fireworks" id="fireworks"></div>
+    <div class="footer">© 2024 Тестовое приложение. Все права защищены.</div>
 
-    <footer>© 2024 Тестовое приложение. Все права защищены.</footer>
+    <canvas id="fireworksCanvas"></canvas>
 
     <script>
+        // Функция для запуска фейерверка
         function triggerFireworks() {
-            const fireworks = document.getElementById('fireworks');
-            const canvas = document.createElement('canvas');
-            fireworks.appendChild(canvas);
-
-            const ctx = canvas.getContext('2d');
+            const fireworksCanvas = document.getElementById('fireworksCanvas');
+            const ctx = fireworksCanvas.getContext('2d');
             const particles = [];
 
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            fireworksCanvas.width = window.innerWidth;
+            fireworksCanvas.height = window.innerHeight;
 
-            class Particle {
-                constructor(x, y) {
-                    this.x = x;
-                    this.y = y;
-                    this.size = Math.random() * 5 + 1;
-                    this.speedX = Math.random() * 6 - 3;
-                    this.speedY = Math.random() * 3 - 1.5;
-                    this.color = 'hsl(' + Math.random() * 360 + ', 100%, 50%)';
-                }
-                update() {
-                    this.x += this.speedX;
-                    this.y += this.speedY;
-                    if (this.size > 0.2) this.size -= 0.1;
-                }
-                draw() {
-                    ctx.fillStyle = this.color;
+            function random(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            function createParticle(x, y) {
+                const speed = random(2, 10);
+                const angle = random(0, Math.PI * 2);
+                const color = `hsl(${random(0, 360)}, 100%, 50%)`;
+                particles.push({
+                    x,
+                    y,
+                    speed,
+                    angle,
+                    color,
+                    life: random(50, 100),
+                    alpha: 1
+                });
+            }
+
+            function updateParticles() {
+                ctx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+                particles.forEach((particle, index) => {
+                    particle.x += Math.cos(particle.angle) * particle.speed;
+                    particle.y += Math.sin(particle.angle) * particle.speed;
+                    particle.alpha -= 0.01;
+                    ctx.fillStyle = particle.color;
+                    ctx.globalAlpha = particle.alpha;
                     ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
                     ctx.fill();
-                }
-            }
-
-            function handleParticles() {
-                for (let i = 0; i < particles.length; i++) {
-                    particles[i].update();
-                    particles[i].draw();
-                    if (particles[i].size <= 0.3) {
-                        particles.splice(i, 1);
-                        i--;
+                    if (particle.alpha <= 0) {
+                        particles.splice(index, 1);
                     }
-                }
-            }
-
-            function createFirework(x, y) {
-                for (let i = 0; i < 100; i++) {
-                    particles.push(new Particle(x, y));
-                }
+                });
             }
 
             function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                handleParticles();
+                updateParticles();
                 requestAnimationFrame(animate);
             }
 
-            canvas.addEventListener('click', (event) => {
-                createFirework(event.clientX, event.clientY);
+            fireworksCanvas.addEventListener('click', (e) => {
+                for (let i = 0; i < 100; i++) {
+                    createParticle(e.clientX, e.clientY);
+                }
             });
 
-            createFirework(window.innerWidth / 2, window.innerHeight / 2);
+            for (let i = 0; i < 100; i++) {
+                createParticle(fireworksCanvas.width / 2, fireworksCanvas.height / 2);
+            }
+
             animate();
         }
+
+        // Убедимся, что фейерверк сработает при клике на кнопку
+        document.querySelector('.pay-respect-btn').addEventListener('click', triggerFireworks);
     </script>
+
 </body>
 </html>
